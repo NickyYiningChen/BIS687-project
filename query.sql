@@ -4,55 +4,34 @@
   -- One query for first day vital signs;
   -- One query for fluid related measurements;
   -- Join queries together, using pat_cohort as primary table, gives us final dataset
-WITH
-  pat_cohort AS (
-  SELECT
-    subject_id,
-    hadm_id,
-    icustay_id,
-    LOS,
-    icd9_code,
-    age,
-    icu_stay_rank
+WITH pat_cohort AS (
+  SELECT 
+    * 
   FROM (
-    SELECT
-      *,
-      ROW_NUMBER() OVER (PARTITION BY SUBJECT_ID ORDER BY INTIME, seq_num) AS icu_stay_rank
-    FROM (
-      SELECT
-        icu.subject_id,
-        icu.hadm_id,
-        icu.icustay_id,
-        icu.intime,
-        icu.LOS,
-        icd9_code,
-        SEQ_NUM,
-        pat.dob,
-        CASE
-          WHEN DATE_DIFF(icu.INTIME, pat.DOB, year) >=300 THEN 90
-        ELSE
-        DATE_DIFF(icu.INTIME, pat.DOB, year)
-      END
-        AS age
-      FROM
-        `physionet-data.mimiciii_clinical.icustays` icu
-      JOIN
-        `physionet-data.mimiciii_clinical.diagnoses_icd` d
-      ON
-        icu.SUBJECT_ID = d.SUBJECT_ID
-      JOIN
-        `physionet-data.mimiciii_clinical.patients` pat
-      ON
-        icu.SUBJECT_ID = pat.SUBJECT_ID
-      WHERE
-        icd9_code LIKE '428%'
-        AND LOS >= 1)
-    WHERE
-      age >= 18)
-  WHERE
-    icu_stay_rank = 1
-  ORDER BY
-    SUBJECT_ID),
+    SELECT 
+      icu.subject_id,
+      icu.hadm_id,
+      icu.icustay_id,
+      icu.intime,
+      icu.los,
+      d.icd9_code,
+      pat.dob,
+      CASE 
+        WHEN DATE_DIFF(icu.intime, pat.dob, YEAR) >= 300 THEN 90 
+        ELSE DATE_DIFF(icu.intime, pat.dob, YEAR) 
+      END AS age,
+      ROW_NUMBER() OVER (PARTITION BY icu.subject_id ORDER BY icu.intime, d.seq_num) AS icu_stay_rank,
+      adm.hospital_expire_flag AS mortality
+    FROM 
+      `physionet-data.mimiciii_clinical.icustays` icu
+    JOIN `physionet-data.mimiciii_clinical.diagnoses_icd` d ON icu.hadm_id = d.hadm_id
+    JOIN `physionet-data.mimiciii_clinical.patients` pat ON icu.subject_id = pat.subject_id
+    JOIN `physionet-data.mimiciii_clinical.admissions` adm ON icu.hadm_id = adm.hadm_id
+    WHERE 
+      (d.icd9_code = '99592' OR d.icd9_code = '78552') AND icu.los >= 1 AND DATE_DIFF(icu.intime, pat.dob, YEAR) >= 18
+  ) AS subquery
+  WHERE icu_stay_rank = 1
+),
   -- Extract gender and ethnicity information for each icustay_ids
   demographics AS (
   SELECT
@@ -1210,6 +1189,7 @@ SELECT
   pc.age,
   pc.icu_stay_rank,
   pc.hadm_id,
+  pc.mortality, 
   ROUND(CAST(wt.weight_first AS NUMERIC), 2) AS weight_first,
   ROUND(CAST(ht.height_first AS NUMERIC), 2) AS height_first,
   ROUND(CAST(hr.heart_rate_first AS NUMERIC), 2) AS heart_rate_first,
