@@ -116,6 +116,25 @@ WITH
     ) AS neurologic
   from `physionet-data.mimiciii_clinical.diagnoses_icd`
   GROUP BY subject_id, hadm_id
+)
+-- procedure codes:
+-- "96.7 - Ventilator management"
+-- translated:
+--    9670	Continuous invasive mechanical ventilation of unspecified duration
+--    9671	Continuous invasive mechanical ventilation for less than 96 consecutive hours
+--    9672	Continuous invasive mechanical ventilation for 96 consecutive hours or more
+-- "39.95 - Hemodialysis"
+--    3995	Hemodialysis
+-- "89.14 - Electroencephalography"
+--    8914	Electroencephalogram
+, co_proc as
+(
+  SELECT subject_id, hadm_id
+  , MAX(CASE WHEN icd9_code = '967' then 1 ELSE 0 END) as respiratory
+  , MAX(CASE WHEN icd9_code = '3995' then 1 ELSE 0 END) as renal
+  , MAX(CASE WHEN icd9_code = '8914' then 1 ELSE 0 END) as neurologic
+  FROM `physionet-data.mimiciii_clinical.procedures_icd`
+  GROUP BY subject_id, hadm_id
 ),
   notes_first_day AS (
   SELECT
@@ -1285,7 +1304,7 @@ SELECT
   epi.total_epinephrine_duration_hours,
   dop.total_dopamine_duration_hours,
   nor.total_norepinephrine_duration_hours,
-  --nfd.text AS first_day_notes
+  nfd.text AS first_day_notes
 FROM
   pat_cohort pc
 JOIN
@@ -1301,6 +1320,8 @@ JOIN
 ON
   pc.subject_id = pat.subject_id
 JOIN co_dx ON pc.subject_id = co_dx.subject_id AND pc.hadm_id = co_dx.hadm_id
+JOIN co_proc ON pc.subject_id = co_proc.subject_id AND pc.hadm_id = co_proc.hadm_id
+
 LEFT JOIN (
   SELECT
     icustay_id,
