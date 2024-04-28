@@ -105,10 +105,10 @@ def process_notes():
     df_cohort = pd.read_csv('data/mimic/adm_details.csv', parse_dates=['admittime'])
     df_notes = df_notes.merge(df_cohort[['hadm_id', 'admittime']], on='hadm_id')
     if args.firstday:
-        print('Extracting first day notes...')
+        print('..Exctract Notes..')
         extract_early(df_notes, early_categories)
     else:
-        print('Extracting first 24 notes...')
+        print('..Exctract Notes..')
         extract_first(df_notes, early_categories)
 
 def merge_ids():
