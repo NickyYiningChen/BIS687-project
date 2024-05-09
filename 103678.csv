@@ -1,6 +1,0 @@
-time,HeartRate,SysBP,DiasBP,MeanBP,RespRate,TempC,SpO2,icustay_id,subject_id,ANIONGAP,ALBUMIN,BANDS,BICARBONATE,BILIRUBIN,CREATININE,CHLORIDE,GLUCOSE,HEMATOCRIT,HEMOGLOBIN,LACTATE,PLATELET,POTASSIUM,PTT,INR,PT,SODIUM,BUN,WBC
--12,,,,,,,,256598.0,1569.0,,,,,,,,,,,,,,39.9,1.9,19.9,,,
--6,,,,,,,,256598.0,1569.0,14.0,,,23.0,,4.6,107.0,104.0,23.2,7.4,,61.0,4.0,,,,140.0,21.0,6.0
--5,,,,,,,,256598.0,1569.0,,,,,,,,,,,2.4,,,,,,,,
--4,,,,,,,,256598.0,1569.0,,,,,,,,,26.3,,,,,,,,,,
-0,,,,,,,,256598.0,1569.0,,,,,,,,,,,2.3,,,,,,,,
