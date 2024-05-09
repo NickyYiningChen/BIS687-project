@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 
 import data_loader
 import lstm, cnn
-import loss
+import loss_cal
 
 sys.path.append('./tools')
 import parse
@@ -208,7 +208,7 @@ def main():
     net = cnn.CNN(args)
     # net = lstm.CustomLSTM(args)
     net = torch.nn.DataParallel(net)
-    loss = loss.Loss(0)
+    loss = loss_cal.Loss(0)
 
     net = _cuda(net, 0)
     loss = _cuda(loss, 0)
